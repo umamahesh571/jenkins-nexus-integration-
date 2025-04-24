@@ -38,20 +38,23 @@
     <build>
         <finalName>evolve-technologies</finalName>
         <plugins>
-            <!-- Spring Boot plugin -->
+            <!-- ✅ Disable Spring Boot repackaging -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
             </plugin>
 
-            <!-- Deploy plugin to push WAR to Nexus -->
+            <!-- ✅ Deploy plugin to push WAR to Nexus -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
                 <version>3.1.1</version>
             </plugin>
 
-            <!-- WAR plugin for clean packaging -->
+            <!-- ✅ WAR plugin for clean packaging -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
