@@ -29,8 +29,8 @@
     <!-- ✅ Custom Nexus repository to upload the WAR -->
     <distributionManagement>
         <repository>
-            <id>nexus-maven-release-repo</id>
-            <url>http://13.201.36.207:8081/repository/maven-release-repo/</url>
+            <id>nexus-maven-snapshot-repo</id>
+            <url>http://13.127.242.63:8081/repository/maven-snapshot-repo/</url>
         </repository>
     </distributionManagement>
 
