@@ -21,24 +21,10 @@ pipeline {
 
         stage('Build WAR') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh 'mvn clean deploy -DskipTests'
             }
         }
 
-        stage('Upload WAR to Nexus') {
-            steps {
-                sh '''
-                    FILE_PATH=target/${FINAL_NAME}.${PACKAGING}
-                    GROUP_PATH=$(echo ${GROUP_ID} | tr '.' '/')
-                    UPLOAD_URL=${NEXUS_REPO_URL}/${GROUP_PATH}/${ARTIFACT_ID}/${VERSION}/${ARTIFACT_ID}-${VERSION}.${PACKAGING}
-                    
-                    echo "Uploading WAR to: $UPLOAD_URL"
-                    
-                    curl -v -u ${NEXUS_USER}:${NEXUS_PASS} --upload-file $FILE_PATH $UPLOAD_URL
-                '''
-            }
-        }
-    }
 
     post {
         success {
