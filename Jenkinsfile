@@ -2,8 +2,6 @@ pipeline {
     agent any
 
     environment {
-        NEXUS_USER = 'admin'
-        NEXUS_PASS = 'admin'
         NEXUS_REPO_URL = 'http://13.250.96.10:8081/repository/maven-nexus-release/'
         GROUP_ID = 'com.evolve'
         ARTIFACT_ID = 'evolve-technologies'
@@ -21,11 +19,13 @@ pipeline {
 
         stage('Build & Deploy WAR to Nexus') {
             steps {
-                sh '''
-                    mvn clean deploy -DskipTests \
-                    -Dnexus.username=$NEXUS_USER \
-                    -Dnexus.password=$NEXUS_PASS
-                '''
+                withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    sh '''
+                        mvn clean deploy -DskipTests \
+                        -Dnexus.username=$NEXUS_USER \
+                        -Dnexus.password=$NEXUS_PASS
+                    '''
+                }
             }
         }
     }
