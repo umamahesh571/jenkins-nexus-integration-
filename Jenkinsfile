@@ -19,11 +19,16 @@ pipeline {
             }
         }
 
-        stage('Build WAR') {
+        stage('Build & Deploy WAR to Nexus') {
             steps {
-                sh 'mvn clean deploy -DskipTests'
+                sh '''
+                    mvn clean deploy -DskipTests \
+                    -Dnexus.username=$NEXUS_USER \
+                    -Dnexus.password=$NEXUS_PASS
+                '''
             }
         }
+    }
 
     post {
         success {
