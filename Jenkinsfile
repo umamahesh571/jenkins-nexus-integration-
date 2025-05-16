@@ -2,7 +2,9 @@ pipeline {
     agent any
 
     environment {
-        NEXUS_REPO_URL = 'http://13.250.96.10:8081/repository/maven-nexus-release/'
+        NEXUS_USER = 'admin'
+        NEXUS_PASS = 'admin'
+        NEXUS_REPO_URL = 'http://13.127.242.63:8081/repository/maven-snapshot-repo/'
         GROUP_ID = 'com.evolve'
         ARTIFACT_ID = 'evolve-technologies'
         VERSION = '1.0'
@@ -17,15 +19,23 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy WAR to Nexus') {
+        stage('Build WAR') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
-                    sh '''
-                        mvn clean deploy -DskipTests \
-                        -Dnexus.username=$NEXUS_USER \
-                        -Dnexus.password=$NEXUS_PASS
-                    '''
-                }
+                sh 'mvn clean package -DskipTests'
+            }
+        }
+
+        stage('Upload WAR to Nexus') {
+            steps {
+                sh '''
+                    FILE_PATH=target/${FINAL_NAME}.${PACKAGING}
+                    GROUP_PATH=$(echo ${GROUP_ID} | tr '.' '/')
+                    UPLOAD_URL=${NEXUS_REPO_URL}/${GROUP_PATH}/${ARTIFACT_ID}/${VERSION}/${ARTIFACT_ID}-${VERSION}.${PACKAGING}
+                    
+                    echo "Uploading WAR to: $UPLOAD_URL"
+                    
+                    curl -v -u ${NEXUS_USER}:${NEXUS_PASS} --upload-file $FILE_PATH $UPLOAD_URL
+                '''
             }
         }
     }
