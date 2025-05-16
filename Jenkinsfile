@@ -25,7 +25,6 @@ pipeline {
             }
         }
 
-
     post {
         success {
             echo '✅ WAR file built and uploaded to Nexus successfully.'
