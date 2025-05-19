@@ -1,1 +1,1 @@
-sample project for et
+sample project for jenkins nexus integration
