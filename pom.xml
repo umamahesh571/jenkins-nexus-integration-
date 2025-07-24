@@ -15,10 +15,9 @@
         <relativePath/>
     </parent>
 
-    <!-- ✅ Updated for Java 21 and Sonar Integration -->
+    <!-- ✅ Java 21 + SonarQube config -->
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
         <sonar.projectKey>evolve-technologies</sonar.projectKey>
     </properties>
 
@@ -36,16 +35,18 @@
     <build>
         <finalName>evolve-technologies</finalName>
         <plugins>
-            <!-- ✅ Skip Spring Boot repackaging (for WAR) -->
+
+            <!-- ✅ Force Java 21 compilation -->
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
                 <configuration>
-                    <skip>true</skip>
+                    <release>21</release>
                 </configuration>
             </plugin>
 
-            <!-- ✅ WAR plugin for packaging -->
+            <!-- ✅ WAR packaging (not JAR) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
@@ -55,12 +56,22 @@
                 </configuration>
             </plugin>
 
-            <!-- ✅ Sonar Scanner Plugin -->
+            <!-- ✅ Skip Boot repackage (since you're deploying to external server) -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+
+            <!-- ✅ Sonar Scanner plugin -->
             <plugin>
                 <groupId>org.sonarsource.scanner.maven</groupId>
                 <artifactId>sonar-maven-plugin</artifactId>
                 <version>3.11.0.3922</version>
             </plugin>
+
         </plugins>
     </build>
 </project>
