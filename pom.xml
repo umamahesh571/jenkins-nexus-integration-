@@ -15,9 +15,10 @@
         <relativePath/>
     </parent>
 
+    <!-- ✅ Updated for Java 21 and Sonar Integration -->
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <sonar.projectKey>evolve-technologies</sonar.projectKey>
     </properties>
 
@@ -35,7 +36,7 @@
     <build>
         <finalName>evolve-technologies</finalName>
         <plugins>
-            <!-- ✅ Skip boot repackaging -->
+            <!-- ✅ Skip Spring Boot repackaging (for WAR) -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -44,7 +45,7 @@
                 </configuration>
             </plugin>
 
-            <!-- ✅ WAR packaging -->
+            <!-- ✅ WAR plugin for packaging -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
