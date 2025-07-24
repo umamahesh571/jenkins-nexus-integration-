@@ -1,6 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.evolve</groupId>
@@ -35,7 +36,7 @@
     <build>
         <finalName>evolve-technologies</finalName>
         <plugins>
-            <!-- Disable Spring Boot repackaging -->
+            <!-- Disable Spring Boot repackage for WAR -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -44,17 +45,18 @@
                 </configuration>
             </plugin>
 
-            <!-- Compiler plugin with release=21 for Java 21 -->
+            <!-- Compiler Plugin for Java 21 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <release>21</release>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
                 </configuration>
             </plugin>
 
-            <!-- WAR packaging plugin -->
+            <!-- WAR Packaging Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
@@ -65,4 +67,5 @@
             </plugin>
         </plugins>
     </build>
+
 </project>
