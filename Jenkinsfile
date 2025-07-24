@@ -2,14 +2,8 @@ pipeline {
     agent any
 
     environment {
-        NEXUS_USER = 'admin'
-        NEXUS_PASS = 'admin'
-        NEXUS_REPO_URL = 'http://13.127.242.63:8081/repository/maven-snapshot-repo/'
-        GROUP_ID = 'com.evolve'
-        ARTIFACT_ID = 'evolve-technologies'
-        VERSION = '1.0'
-        PACKAGING = 'war'
-        FINAL_NAME = 'evolve-technologies'
+        SONARQUBE_URL = 'SonarQubeServer'   // Jenkins > Manage Jenkins > Configure System > SonarQube servers name
+        SONAR_TOKEN_CREDENTIAL_ID = 'sonar-token' // Jenkins credentials ID for your SonarQube token
     }
 
     stages {
@@ -25,27 +19,29 @@ pipeline {
             }
         }
 
-        stage('Upload WAR to Nexus') {
+        stage('SonarQube Scan') {
             steps {
-                sh '''
-                    FILE_PATH=target/${FINAL_NAME}.${PACKAGING}
-                    GROUP_PATH=$(echo ${GROUP_ID} | tr '.' '/')
-                    UPLOAD_URL=${NEXUS_REPO_URL}/${GROUP_PATH}/${ARTIFACT_ID}/${VERSION}/${ARTIFACT_ID}-${VERSION}.${PACKAGING}
-                    
-                    echo "Uploading WAR to: $UPLOAD_URL"
-                    
-                    curl -v -u ${NEXUS_USER}:${NEXUS_PASS} --upload-file $FILE_PATH $UPLOAD_URL
-                '''
+                withSonarQubeEnv("${SONARQUBE_URL}") {
+                    sh 'mvn sonar:sonar -Dsonar.projectKey=evolve-technologies -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_AUTH_TOKEN'
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
             }
         }
     }
 
     post {
         success {
-            echo '✅ WAR file built and uploaded to Nexus successfully.'
+            echo '✅ Build & Sonar scan completed successfully.'
         }
         failure {
-            echo '❌ Failed to build or upload the WAR file to Nexus.'
+            echo '❌ Build failed or Sonar quality gate not passed.'
         }
     }
 }
