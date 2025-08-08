@@ -1,0 +1,236 @@
+MANUAL INSTALLATION:
+====================
+server requirements:
+ubuntu t2.medium 4 gib server
+enable port 8081 
+nexus default port is 8081
+
+JAVA INSTALLATION:
+
+sudo apt update
+sudo apt install -y openjdk-17-jdk wget tar
+
+
+Create Nexus User and Directories
+
+sudo useradd -M -d /opt/nexus -s /bin/bash nexus
+sudo mkdir -p /opt/nexus /opt/sonatype-work
+sudo chown -R nexus:nexus /opt/nexus /opt/sonatype-work
+
+Download and Extract Nexus
+
+cd /tmp
+wget https://download.sonatype.com/nexus/3/nexus-3.79.1-04-linux-x86_64.tar.gz
+tar -xvzf nexus-3.79.1-04-linux-x86_64.tar.gz
+
+Move Nexus Files to /opt/nexus
+
+sudo mv nexus-3.79.1-04/* /opt/nexus/
+sudo chown -R nexus:nexus /opt/nexus
+
+Set Nexus to Run as 'nexus' User
+
+echo 'run_as_user="nexus"' | sudo tee /opt/nexus/bin/nexus.rc
+
+Create systemd Service File
+
+sudo tee /etc/systemd/system/nexus.service > /dev/null <<EOF
+[Unit]
+Description=Nexus Repository Manager
+After=network.target
+
+[Service]
+Type=forking
+LimitNOFILE=65536
+User=nexus
+Group=nexus
+ExecStart=/opt/nexus/bin/nexus start
+ExecStop=/opt/nexus/bin/nexus stop
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+Enable and Start Nexus as a Service
+
+sudo systemctl daemon-reload
+sudo systemctl enable nexus
+sudo systemctl start nexus
+JUST CHECK STATUS 
+
+sudo systemctl status nexus  ---> it should be up and running
+
+http://<your-server-ip>:8081
+
+username: admin
+password: get from below command
+sudo cat /opt/sonatype-work/nexus3/admin.password
+
+NOW CREATE A REPO:
+
+CREATE REPOSITORY---->settings -->repository--->create repo--> slect maven2(hosted)
+repo name:
+version policy: select (mixed)
+deployment policy: allow redeploy
+now keep remaining deatails as it is
+
+---> click on create repository
+
+
+ NOW CONNECT TO JENKINS SERVER COMMAND PROMPT
+SETTING UP settings.xml
+
+(/var/lib/jenkins/.m2/settings.xml)
+
+TO GO TO JENKINS DEFAULT HOME PATH
+
+cd /var/lib/jenkins
+
+CREATE .m2 directory                    -----it is ahidden directory
+sudo mkdir -p .m2                       ----->it creates .m2 directory
+sudo chown -R jenkins:jenkins .m2       ----->it changes ownership of user and group to jenkins
+
+GO TO .m2 directory
+
+cd .m2
+
+IN .m2 DIRECTORY CREATE settings.xml file
+
+sudo vi settings.xml
+
+COPY THE FOLLOWING CONTENT AND PASTE settings.xml file
+
+-------------------------------------------------------------------------------------------------------------------
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+    
+    <servers>
+        <server>
+            <id>nexus-maven-snapshot-repo</id>
+            <username>admin</username>
+            <password>admin</password>
+        </server>
+    </servers>
+
+    <mirrors>
+        <!-- Mirror all downloads via Nexus -->
+        <mirror>
+            <id>nexus</id>
+            <mirrorOf>*</mirrorOf>
+            <url>http://13.127.242.63:8081/repository/maven-public/</url>
+        </mirror>
+    </mirrors>
+
+    <profiles>
+        <profile>
+            <id>nexus</id>
+            <repositories>
+                <repository>
+                    <id>central</id>
+                    <url>http://13.127.242.63:8081/repository/maven-central/</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>true</enabled></snapshots>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>central</id>
+                    <url>http://13.127.242.63:8081/repository/maven-central/</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>true</enabled></snapshots>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+    </profiles>
+
+    <activeProfiles>
+        <activeProfile>nexus</activeProfile>
+    </activeProfiles>
+
+</settings>
+-------------------------------------------------------------------------------------------------------------------
+
+TO  SAVE THE FILE CLICK ON ESCAPE AND TYPE :wq! AND ENTER
+
+
+NOW GO TO JENKINS UI  AND DO FOLLOWING STEPS
+
+TO INTEGRATE nexus MANUALLY WE NEED TO INSTALL PLUG IN CALLED NEXUS ARTIFACT UPLOADER
+
+NEXT GO TO MANAGE JENKINS ---> CREDENTIALS ---> GLOBAL ---> ADD NEXUS CREDENTIALS WITH USER NAME AND PASSWORD
+
+NOW CREATE NEW PIPELINE JOB WITH PIPELINE SCRIPT FROM SCM OPTION
+
+(FOR PRACTICE  FORK REPO FROM umamahesh571/springboot.4.0)
+
+
+
+POINTS TO REMEBER:
+
+BEFORE BUILDING THE JOB PLEASE MAKE SURE Jenkinsfile IS UPDATED WITH YOUR NEXUS REPO URL
+
+AND ALSO UPDATE pom.xml AND settings.xml  WITH YOUR NEXUS SERVER PUBLIC IP AND URL IN THEIR RESPECTIVE PLACES
+
+IN PIPELINE SCRIPT IN CHECK OUT STAGE PLEASE GIVE YOUR GITHUB REPO URL
+
+
+ONCE YOU ARE DONE WITH ALL THIS STEPS  NOW TRY TO BUILD YOUR JENKINS JOB 
+
+ONCE JOB IS EXCUTED YOU  CAN SEE ARTIFACT IN NEXUS REPO 
+
+pipeline script:
+
+
+pipeline {
+    agent any
+
+    environment {
+        NEXUS_USER = 'admin'
+        NEXUS_PASS = 'admin'
+        NEXUS_REPO_URL = 'http://13.127.242.63:8081/repository/maven-snapshot-repo/'
+        GROUP_ID = 'com.evolve'
+        ARTIFACT_ID = 'evolve-technologies'
+        VERSION = '1.0'
+        PACKAGING = 'war'
+        FINAL_NAME = 'evolve-technologies'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git url: 'https://github.com/umamahesh571/springboot.4.0.git', branch: 'main'
+            }
+        }
+
+        stage('Build WAR') {
+            steps {
+                sh 'mvn clean package -DskipTests'
+            }
+        }
+
+        stage('Upload WAR to Nexus') {
+            steps {
+                sh '''
+                    FILE_PATH=target/${FINAL_NAME}.${PACKAGING}
+                    GROUP_PATH=$(echo ${GROUP_ID} | tr '.' '/')
+                    UPLOAD_URL=${NEXUS_REPO_URL}/${GROUP_PATH}/${ARTIFACT_ID}/${VERSION}/${ARTIFACT_ID}-${VERSION}.${PACKAGING}
+                    
+                    echo "Uploading WAR to: $UPLOAD_URL"
+                    
+                    curl -v -u ${NEXUS_USER}:${NEXUS_PASS} --upload-file $FILE_PATH $UPLOAD_URL
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ WAR file built and uploaded to Nexus successfully.'
+        }
+        failure {
+            echo '❌ Failed to build or upload the WAR file to Nexus.'
+        }
+    }
+}
