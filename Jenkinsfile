@@ -7,7 +7,7 @@ pipeline {
         NEXUS_REPO_URL = 'http://47.130.152.158:8081/repository/maven-snapshot-1/'
         GROUP_ID = 'com.evolve'
         ARTIFACT_ID = 'evolve-technologies'
-        VERSION = '1.0'
+        VERSION = '2.0'
         PACKAGING = 'war'
         FINAL_NAME = 'evolve-technologies'
     }
